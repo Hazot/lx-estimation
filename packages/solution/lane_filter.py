@@ -4,7 +4,11 @@ import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from math import floor, sqrt
 
-from solution.histogram_filter import histogram_update, histogram_predict, histogram_prior
+from solution.histogram_filter import (
+    histogram_update,
+    histogram_predict,
+    histogram_prior,
+)
 from dt_computer_vision.ground_projection import GroundProjector
 from typing import Tuple, Dict, Union, List
 from dt_computer_vision.camera import CameraModel, NormalizedImagePoint, Pixel
@@ -89,7 +93,8 @@ class LaneFilterHistogram:
             setattr(self, p_name, kwargs[p_name])
 
         self.d, self.phi = np.mgrid[
-            self.d_min : self.d_max : self.delta_d, self.phi_min : self.phi_max : self.delta_phi
+            self.d_min : self.d_max : self.delta_d,
+            self.phi_min : self.phi_max : self.delta_phi,
         ]
         self.grid_spec = {
             "d": self.d,
@@ -126,14 +131,10 @@ class LaneFilterHistogram:
         self.initialize()
         # colors
         self.color_ranges: Dict[str, ColorRange] = {
-            "white": ColorRange.fromDict({
-                "low": [0, 0, 150],
-                "high": [180, 100, 255]
-            }),
-            "yellow": ColorRange.fromDict({
-                "low": [0, 100, 100],
-                "high": [45, 255, 255]
-            })
+            "white": ColorRange.fromDict({"low": [0, 0, 150], "high": [180, 100, 255]}),
+            "yellow": ColorRange.fromDict(
+                {"low": [0, 100, 100], "high": [45, 255, 255]}
+            ),
         }
         self.colors: Dict[str, Color] = {
             "red": (0, 0, 255),
@@ -150,7 +151,9 @@ class LaneFilterHistogram:
         if not self.camera_initialized:
             return
         detector = LineDetector()
-        color_detections: List[Detections] = detector.detect(img_cropped, self.colors_to_detect)
+        color_detections: List[Detections] = detector.detect(
+            img_cropped, self.colors_to_detect
+        )
         lines: Dict[str, dict] = {}
         for i, detections in enumerate(color_detections):
             color = self.color_order[i]
@@ -159,10 +162,14 @@ class LaneFilterHistogram:
                 "lines": detections.lines.tolist(),
                 "centers": detections.centers.tolist(),
                 "normals": detections.normals.tolist(),
-                "color": self.color_ranges[color].representative
+                "color": self.color_ranges[color].representative,
             }
-        image_w_dets = draw_segments(img_cropped, {self.color_ranges["yellow"]: color_detections[0]})
-        self.image_w_dets = draw_segments(image_w_dets, {self.color_ranges["white"]: color_detections[1]})
+        image_w_dets = draw_segments(
+            img_cropped, {self.color_ranges["yellow"]: color_detections[0]}
+        )
+        self.image_w_dets = draw_segments(
+            image_w_dets, {self.color_ranges["white"]: color_detections[1]}
+        )
         return lines
 
     def lines_to_projected_segments(self, lines):
@@ -186,10 +193,11 @@ class LaneFilterHistogram:
                 grounded_p0: SegmentPoint = self.projector.vector2ground(p0_norm)
                 grounded_p1: SegmentPoint = self.projector.vector2ground(p1_norm)
                 # add grounded segment to output
-                segments.append(Segment(
-                    points=[grounded_p0, grounded_p1],
-                    color=SegmentColor(color)
-                ))
+                segments.append(
+                    Segment(
+                        points=[grounded_p0, grounded_p1], color=SegmentColor(color)
+                    )
+                )
                 grounded_segments.append((grounded_p0, grounded_p1))
 
             colored_segments[self.colors[color]] = grounded_segments
@@ -198,7 +206,9 @@ class LaneFilterHistogram:
         return segments
 
     def initialize(self):
-        self.belief = histogram_prior(self.belief, self.grid_spec, self.mean_0, self.cov_0)
+        self.belief = histogram_prior(
+            self.belief, self.grid_spec, self.mean_0, self.cov_0
+        )
         print("Histogram Filter Initialized")
         self.initialized = True
 
