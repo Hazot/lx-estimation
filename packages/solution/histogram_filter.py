@@ -35,11 +35,16 @@ def histogram_predict(belief, left_encoder_ticks, right_encoder_ticks, grid_spec
     left_wheel_d = robot_spec['wheel_radius'] * left_encoder_ticks * alpha
     right_wheel_d = robot_spec['wheel_radius'] * right_encoder_ticks * alpha
 
+    # Linear and angular velocity
     v = (left_wheel_d + right_wheel_d) / 2
     w = (right_wheel_d - left_wheel_d) / robot_spec['wheel_baseline']
 
+    # Adjust propagation using phi_max
+    dx = v * np.cos(phi_max)  # x-displacement
+    dy = v * np.sin(phi_max)  # y-displacement (not used)
+
     # propagate each centroid
-    d_t = grid_spec["d"] + v
+    d_t = grid_spec["d"] + dx
     phi_t = grid_spec["phi"] + w
 
     p_belief = np.zeros(belief.shape)
@@ -178,12 +183,9 @@ def histogram_update(belief, segments, road_spec, grid_spec):
         # probability distribution
 
         # replace this with something that combines the belief and the measurement_likelihood
-        posterior_belief = belief * measurement_likelihood
-        denom = np.sum(posterior_belief)
-        if denom == 0:
-            return measurement_likelihood, belief
-        posterior_belief /= denom
-    return (measurement_likelihood, posterior_belief)
+        belief *= measurement_likelihood
+        belief /= np.sum(belief)
+    return measurement_likelihood, belief
 
 def getSegmentDistance(segment):
     x_c = (segment.points[0].x + segment.points[1].x) / 2
