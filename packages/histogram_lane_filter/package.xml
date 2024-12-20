@@ -2,7 +2,7 @@
 <package>
   <name>histogram_lane_filter</name>
   <version>1.0.0</version>
-  <description>TODO: Add a description of package `lane_filter` in `package.xml`.</description>
+  <description>A ROS package for implementing a histogram-based lane filtering algorithm, typically used in autonomous driving applications.</description>
 
   <maintainer email="paull@mit.edu">Liam Paull</maintainer>
   <license>GPLv3</license>
